@@ -87,7 +87,12 @@ const editFormSchema = z.object({
   name: z.string().min(1).max(12),
 });
 
-export const update = async (state, formData: FormData) => {
+export interface EditActionState {
+  status: 'idle' | 'invalid_session' | 'success' | 'invalid_data' | 'failed'
+  name: string
+}
+
+export const update = async (state: EditActionState, formData: FormData) => {
   try {
     const validatedData = editFormSchema.parse({
       name: formData.get('name'),

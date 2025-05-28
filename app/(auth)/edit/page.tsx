@@ -6,7 +6,7 @@ import {HTMLInputTypeAttribute, useActionState, useEffect, useMemo} from "react"
 import {toast} from "@/components/toast";
 import {Input} from "@/components/ui/input";
 import {SubmitButton} from "@/components/submit-button";
-import {update} from "@/app/(auth)/actions";
+import {EditActionState, update} from "@/app/(auth)/actions";
 import {redirect} from "next/navigation";
 
 interface User {
@@ -43,7 +43,7 @@ export default function Page() {
 }
 
 const Form = ({ user }: { user: User }) => {
-    const [state, formAction, isPending] = useActionState(update, {
+    const [state, formAction, isPending] = useActionState<EditActionState, FormData>(update, {
         status: 'idle',
         name: user.name
     })
