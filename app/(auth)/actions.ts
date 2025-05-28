@@ -2,9 +2,9 @@
 
 import { z } from 'zod';
 
-import { createUser, getUser } from '@/lib/db/queries';
-
-import { signIn } from './auth';
+import {createUser, getUser, updateUser} from '@/lib/db/queries';
+import {auth, signIn} from './auth';
+import {generateRandomName} from "@/lib/utils";
 
 const authFormSchema = z.object({
   email: z.string().email(),
@@ -66,7 +66,7 @@ export const register = async (
     if (user) {
       return { status: 'user_exists' } as RegisterActionState;
     }
-    await createUser(validatedData.email, validatedData.password);
+    await createUser(validatedData.email, validatedData.password, generateRandomName());
     await signIn('credentials', {
       email: validatedData.email,
       password: validatedData.password,
@@ -82,3 +82,37 @@ export const register = async (
     return { status: 'failed' };
   }
 };
+
+const editFormSchema = z.object({
+  name: z.string().min(1).max(12),
+});
+
+export const update = async (state, formData: FormData) => {
+  try {
+    const validatedData = editFormSchema.parse({
+      name: formData.get('name'),
+    });
+
+    const session = await auth()
+
+    if (!session) {
+      return { status: 'invalid_session' }
+    }
+
+    await updateUser(session.user.email!, {
+      name: validatedData.name
+    })
+
+    return {
+      ...state,
+      name: validatedData.name,
+      status: 'success'
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { status: 'invalid_data' };
+    }
+
+    return { status: 'failed' };
+  }
+}

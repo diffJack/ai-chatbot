@@ -29,7 +29,7 @@ import {
   stream,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
-import { generateUUID } from '../utils';
+import { generateUUID, generateRandomName } from '../utils';
 import { generateHashedPassword } from './utils';
 import type { VisibilityType } from '@/components/visibility-selector';
 import { ChatSDKError } from '../errors';
@@ -53,11 +53,11 @@ export async function getUser(email: string): Promise<Array<User>> {
   }
 }
 
-export async function createUser(email: string, password: string) {
+export async function createUser(email: string, password: string, name: string) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
-    return await db.insert(user).values({ email, password: hashedPassword });
+    return await db.insert(user).values({ email, password: hashedPassword, name });
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to create user');
   }
@@ -66,11 +66,13 @@ export async function createUser(email: string, password: string) {
 export async function createGuestUser() {
   const email = `guest-${Date.now()}`;
   const password = generateHashedPassword(generateUUID());
+  const name = generateRandomName()
 
   try {
-    return await db.insert(user).values({ email, password }).returning({
+    return await db.insert(user).values({ email, password, name }).returning({
       id: user.id,
       email: user.email,
+      name: user.name
     });
   } catch (error) {
     throw new ChatSDKError(
@@ -534,5 +536,22 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
       'bad_request:database',
       'Failed to get stream ids by chat id',
     );
+  }
+}
+
+type UpdateUserParams = Partial<Omit<User, 'id' | 'email'>>
+
+export async function updateUser(email: string, info: UpdateUserParams) {
+  try {
+    if (info.password) {
+      info.password = generateHashedPassword(info.password);
+    }
+
+    return await db
+        .update(user)
+        .set(info)
+        .where(eq(user.email, email))
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to update user');
   }
 }

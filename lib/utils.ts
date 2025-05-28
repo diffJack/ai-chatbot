@@ -89,3 +89,14 @@ export function getTrailingMessageId({
 export function sanitizeText(text: string) {
   return text.replace('<has_function_call>', '');
 }
+
+export function generateRandomName() {
+  const names = [
+    "独孤求败", "东方不败", "西门吹雪", "叶孤城", "令狐冲",
+    "杨过", "郭靖", "张无忌", "李寻欢", "楚留香",
+    "小龙女", "黄蓉", "王语嫣", "赵敏", "周芷若",
+    "任我行", "欧阳锋", "金轮法王", "成昆", "左冷禅"
+  ]
+
+  return names[Math.floor(Math.random() * names.length)]
+}
