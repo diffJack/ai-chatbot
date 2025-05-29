@@ -2,7 +2,7 @@
 
 import {Label} from "@/components/ui/label";
 import {useSession} from "next-auth/react";
-import {HTMLInputTypeAttribute, useActionState, useEffect, useMemo} from "react";
+import {HTMLInputTypeAttribute, memo, useActionState, useEffect, useMemo} from "react";
 import {toast} from "@/components/toast";
 import {Input} from "@/components/ui/input";
 import {SubmitButton} from "@/components/submit-button";
@@ -18,8 +18,8 @@ interface User {
 
 interface FormRowProps {
     label: string
-    user: User
-    field: keyof NonNullable<User>
+    field: keyof NonNullable<EditActionState>
+    defaultValue: string | number | readonly string[] | undefined;
     disabled?: boolean
     inputType?: HTMLInputTypeAttribute
 }
@@ -63,21 +63,23 @@ const Form = ({ user }: { user: User }) => {
 
     return (
         <form action={formAction}>
-            <FormItem label="用户名" user={user} field="name" />
+            <FormItem label="用户名" defaultValue={state.name} field="name" />
             <SubmitButton isSuccessful={isPending}>update</SubmitButton>
         </form>
     )
 }
 
-const FormItem = ({ label, user, field, disabled = false, inputType = 'text' }: FormRowProps) => {
+const PureFormItem = ({ label, defaultValue, field, disabled = false, inputType = 'text' }: FormRowProps) => {
     return (
         <div className="mb-8">
             <Label className="text-primary">
                 {label}
             </Label>
             <div className="mt-2 flex w-full items-center justify-between gap-2">
-                <Input name={field} type={inputType} defaultValue={user[field]} readOnly={disabled}></Input>
+                <Input name={field} type={inputType} defaultValue={defaultValue} readOnly={disabled}></Input>
             </div>
         </div>
     )
 }
+
+const FormItem = memo(PureFormItem)
